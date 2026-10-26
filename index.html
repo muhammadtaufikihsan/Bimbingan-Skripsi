@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM-Skripsi - Sistem Manajemen Bimbingan Skripsi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+        }
+        .print-only { display: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- TOPBAR / NAVBAR HEADER -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo & System Name -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-500/20">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">SIM-Skripsi</span>
+                        <span class="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 bg-blue-50 text-blue-700 font-semibold rounded-full border border-blue-200">v2.4 Prototype</span>
+                    </div>
+                </div>
+
+                <!-- Role Switcher & User Profile -->
+                <div class="flex items-center space-x-4">
+                    <!-- Switcher Peran -->
+                    <div class="relative inline-block text-left">
+                        <label for="roleSelector" class="sr-only">Pilih Peran</label>
+                        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <span class="text-xs font-medium text-slate-500 px-2 hidden md:inline"><i class="fa-solid fa-user-gear mr-1"></i> Peran:</span>
+                            <select id="roleSelector" onchange="switchRole(this.value)" class="bg-white text-slate-700 text-sm font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer border-none">
+                                <option value="mahasiswa">👨‍🎓 Mahasiswa (Budi Santoso)</option>
+                                <option value="dosen">👨‍🏫 Dosen (Dr. Hendra, M.T.)</option>
+                                <option value="kaprodi">🏛️ Kaprodi / Koordinator</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- User Avatar Badge -->
+                    <div class="flex items-center space-x-3 border-l pl-4 border-slate-200">
+                        <img id="userAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-blue-500/30">
+                        <div class="hidden lg:block text-left">
+                            <div id="userName" class="text-sm font-semibold text-slate-800 leading-none">Budi Santoso</div>
+                            <div id="userSub" class="text-xs text-slate-500 mt-1">NIM: 210401088</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NOTIFICATION ALERT CONTAINER -->
+    <div id="toastContainer" class="fixed top-20 right-5 z-50 flex flex-col space-y-2 no-print"></div>
+
+    <!-- MAIN WRAPPER WITH SIDEBAR -->
+    <div class="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6 no-print">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-64 flex-shrink-0 hidden md:block">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm sticky top-24">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400 px-3 mb-3">Menu Utama</div>
+                <nav class="space-y-1.5" id="sidebarMenu">
+                    <!-- Nav Item Dynamic Inject via JS -->
+                </nav>
+
+                <hr class="my-5 border-slate-100">
+
+                <!-- Informasi Ringkas Kampus -->
+                <div class="bg-blue-50 rounded-xl p-3.5 border border-blue-100">
+                    <div class="flex items-center space-x-2 text-blue-700 font-semibold text-xs mb-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Info Akademik</span>
+                    </div>
+                    <p class="text-xs text-blue-900 leading-relaxed">
+                        Batas Akhir Penyerahan Draft Bab Akhir: <span class="font-bold text-blue-700">15 November 2026</span>.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 min-w-0">
+            
+            <!-- SECTION: MAHASISWA VIEW -->
+            <div id="viewMahasiswa" class="space-y-6 hidden">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/10 relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 opacity-10 text-9xl">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <div class="relative z-10 max-w-2xl">
+                        <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-medium backdrop-blur-sm">Tugas Akhir / Skripsi</span>
+                        <h1 class="text-2xl sm:text-3xl font-bold mt-2">Penerapan Machine Learning untuk Prediksi Kelulusan Mahasiswa</h1>
+                        <p class="text-blue-100 text-sm mt-2 flex items-center gap-4">
+                            <span><i class="fa-solid fa-user-tie mr-1"></i> Pembimbing 1: <strong>Dr. Hendra, M.T.</strong></span>
+                            <span><i class="fa-solid fa-user-tie mr-1"></i> Pembimbing 2: <strong>Siti Aminah, M.Kom.</strong></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Progres Skripsi Tracker -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Progres Capaian Skripsi</h2>
+                            <p class="text-sm text-slate-500">Tahapan pengerjaan berdasarkan target revisi dosen</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-extrabold text-blue-600" id="progressPercentage">60%</span>
+                            <span class="text-xs text-slate-400 block">Selesai (Bab 1 - 3 ACC)</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden mb-6 flex">
+                        <div id="progressBarFill" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" style="width: 60%"></div>
+                    </div>
+
+                    <!-- Step Indicators -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+                        <div class="p-3 rounded-xl border border-green-200 bg-green-50/50">
+                            <div class="text-green-600 text-sm font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Bab 1</div>
+                            <div class="text-xs text-slate-500 mt-1">Pendahuluan</div>
+                            <span class="inline-block mt-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">ACC</span>
+                        </div>
+                        <div class="p-3 rounded-xl border border-green-200 bg-green-50/50">
+                            <div class="text-green-600 text-sm font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Bab 2</div>
+                            <div class="text-xs text-slate-500 mt-1">Kajian Pustaka</div>
+                            <span class="inline-block mt-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">ACC</span>
+                        </div>
+                        <div class="p-3 rounded-xl border border-green-200 bg-green-50/50">
+                            <div class="text-green-600 text-sm font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Bab 3</div>
+                            <div class="text-xs text-slate-500 mt-1">Metodologi</div>
+                            <span class="inline-block mt-2 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">ACC</span>
+                        </div>
+                        <div class="p-3 rounded-xl border border-amber-300 bg-amber-50 shadow-sm ring-2 ring-amber-400/30">
+                            <div class="text-amber-700 text-sm font-bold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Bab 4</div>
+                            <div class="text-xs text-slate-600 mt-1">Hasil & Pembahasan</div>
+                            <span class="inline-block mt-2 text-[10px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">Proses Revisi</span>
+                        </div>
+                        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-60">
+                            <div class="text-slate-500 text-sm font-bold"><i class="fa-solid fa-lock mr-1"></i> Bab 5</div>
+                            <div class="text-xs text-slate-400 mt-1">Penutup & Kesimpulan</div>
+                            <span class="inline-block mt-2 text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-semibold">Belum</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="openModalSubmitDraft()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition flex items-center space-x-4 text-left group">
+                        <div class="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Ajukan Draft Bimbingan</div>
+                            <div class="text-xs text-slate-500">Upload file bab terbaru & catatan</div>
+                        </div>
+                    </button>
+                    <button onclick="openModalSchedule()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition flex items-center space-x-4 text-left group">
+                        <div class="p-3 rounded-xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-calendar-plus text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Jadwalkan Temu Dosen</div>
+                            <div class="text-xs text-slate-500">Buat janji bimbingan tatap muka/online</div>
+                        </div>
+                    </button>
+                    <button onclick="printKartuBimbingan()" class="bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition flex items-center space-x-4 text-left group">
+                        <div class="p-3 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-print text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 text-sm">Cetak Kartu Bimbingan</div>
+                            <div class="text-xs text-slate-500">Cetak lembar logbook resmi PDF</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Main Content Tabs / Timeline Logbook & Chat -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column: History Bimbingan (2 cols) -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Histori Bimbingan & Revisi
+                                </h3>
+                                <span class="text-xs text-slate-500" id="bimbinganCount">Total: 4 Sesi</span>
+                            </div>
+
+                            <!-- List Log Bimbingan -->
+                            <div id="mhsHistoryList" class="space-y-4">
+                                <!-- Dynamic Render from JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Chat Direct / Messages -->
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col h-[480px]">
+                            <div class="border-b pb-3 mb-3 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="relative">
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150" class="w-8 h-8 rounded-full">
+                                        <span class="w-2.5 h-2.5 bg-green-500 rounded-full absolute bottom-0 right-0 border-2 border-white"></span>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-800">Dr. Hendra, M.T.</div>
+                                        <div class="text-[10px] text-slate-400">Pembimbing Utama</div>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Online</span>
+                            </div>
+
+                            <!-- Chat Stream -->
+                            <div id="chatStream" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+                                <!-- Dynamic Chat items -->
+                            </div>
+
+                            <!-- Chat Input -->
+                            <form onsubmit="sendChatMessage(event)" class="mt-3 pt-3 border-t flex gap-2">
+                                <input type="text" id="chatInput" placeholder="Ketik pesan singkat..." class="flex-1 text-xs border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-xl text-xs hover:bg-blue-700 transition">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: DOSEN PEMBIMBING VIEW -->
+            <div id="viewDosen" class="space-y-6 hidden">
+                <!-- Dosen Stats Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-xs text-slate-500 font-medium">Mahasiswa Bimbingan</div>
+                        <div class="text-2xl font-bold text-slate-800 mt-1">12 <span class="text-xs font-normal text-slate-400">Mahasiswa</span></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-xs text-slate-500 font-medium">Perlu Di-Review</div>
+                        <div class="text-2xl font-bold text-amber-600 mt-1" id="dosenPendingCount">3 <span class="text-xs font-normal text-amber-500">Draft</span></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-xs text-slate-500 font-medium">Siap Sempro/Sidang</div>
+                        <div class="text-2xl font-bold text-emerald-600 mt-1">4 <span class="text-xs font-normal text-emerald-500">ACC Bab 5</span></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="text-xs text-slate-500 font-medium">Permintaan Jadwal</div>
+                        <div class="text-2xl font-bold text-indigo-600 mt-1">2 <span class="text-xs font-normal text-indigo-500">Menunggu</span></div>
+                    </div>
+                </div>
+
+                <!-- Tabs & Search Filter for Dosen -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Daftar Mahasiswa Bimbingan</h2>
+                            <p class="text-xs text-slate-500">Kelola progres dan periksa pengajuan draft bab mahasiswa</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                            <!-- Filter Input -->
+                            <div class="relative flex-1 md:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input type="text" id="searchMhs" onkeyup="filterMahasiswaDosen()" placeholder="Cari nama / NIM..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <select id="filterBab" onchange="filterMahasiswaDosen()" class="text-xs border border-slate-200 rounded-xl px-3 py-1.5 bg-white text-slate-700 outline-none">
+                                <option value="all">Semua Bab</option>
+                                <option value="Bab 1">Bab 1</option>
+                                <option value="Bab 2">Bab 2</option>
+                                <option value="Bab 3">Bab 3</option>
+                                <option value="Bab 4">Bab 4</option>
+                                <option value="Bab 5">Bab 5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Table List Mahasiswa Bimbingan -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-xs text-slate-400 font-semibold uppercase bg-slate-50/50">
+                                    <th class="py-3 px-4">Mahasiswa</th>
+                                    <th class="py-3 px-4">Judul Skripsi</th>
+                                    <th class="py-3 px-4">Tahap Saat Ini</th>
+                                    <th class="py-3 px-4">Draft Terakhir</th>
+                                    <th class="py-3 px-4">Status Review</th>
+                                    <th class="py-3 px-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableDosenMhs" class="divide-y divide-slate-100 text-xs">
+                                <!-- Dynamic JS Injection -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Schedule Requests Pending -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <h3 class="font-bold text-slate-800 text-md mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-indigo-600"></i> Permintaan Jadwal Bimbingan Masuk
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="dosenScheduleList">
+                        <!-- Dynamic schedule requests -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: KAPRODI / KOORDINATOR VIEW -->
+            <div id="viewKaprodi" class="space-y-6 hidden">
+                <!-- Overview Header -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">Dashboard Koordinator Skripsi / Kaprodi</h2>
+                            <p class="text-xs text-slate-500">Monitoring progres angkatan, kuota dosen, dan kelulusan</p>
+                        </div>
+                        <button onclick="alert('Laporan Rekapitulasi berhasil di-export ke Excel!')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-xl font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel"></i> Export Rekap Data
+                        </button>
+                    </div>
+
+                    <!-- Stat Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 rounded-xl bg-blue-50 border border-blue-100">
+                            <div class="text-xs text-blue-600 font-semibold">Total Mahasiswa Skripsi</div>
+                            <div class="text-2xl font-extrabold text-blue-900 mt-1">128</div>
+                            <div class="text-[10px] text-blue-600 mt-1">Angkatan 2021 & 2022</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-amber-50 border border-amber-100">
+                            <div class="text-xs text-amber-700 font-semibold">Aktif Bimbingan</div>
+                            <div class="text-2xl font-extrabold text-amber-900 mt-1">94</div>
+                            <div class="text-[10px] text-amber-700 mt-1">Bab 1 s.d. Bab 4</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-purple-50 border border-purple-100">
+                            <div class="text-xs text-purple-700 font-semibold">Siap Sidang Skripsi</div>
+                            <div class="text-2xl font-extrabold text-purple-900 mt-1">22</div>
+                            <div class="text-[10px] text-purple-700 mt-1">Lulus Bab 5</div>
+                        </div>
+                        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <div class="text-xs text-emerald-700 font-semibold">Telah Lulus (S.Kom)</div>
+                            <div class="text-2xl font-extrabold text-emerald-900 mt-1">12</div>
+                            <div class="text-[10px] text-emerald-700 mt-1">Semester Ini</div>
+                        </div>
+                    </div>
+
+                    <!-- Distribution Chart Simulation & Dosen Workload -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Kuota Dosen Pembimbing -->
+                        <div class="border border-slate-200 rounded-xl p-4">
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-3">Beban Pembimbingan Dosen</h4>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Dr. Hendra, M.T.</span>
+                                        <span class="text-slate-500">8 / 10 Mahasiswa</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-blue-600 h-full" style="width: 80%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Siti Aminah, M.Kom.</span>
+                                        <span class="text-slate-500">10 / 10 Mahasiswa (Penuh)</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-rose-500 h-full" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="font-medium">Prof. Bambang Supriadi</span>
+                                        <span class="text-slate-500">5 / 10 Mahasiswa</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-500 h-full" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Plotting / Allocation Table -->
+                        <div class="border border-slate-200 rounded-xl p-4">
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-3">Alokasi Pembimbing Baru</h4>
+                            <div class="space-y-2 text-xs">
+                                <div class="p-2.5 bg-slate-50 rounded-lg flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Rian Pratama (210401099)</div>
+                                        <div class="text-[10px] text-slate-500">Judul: IoT Smart Agriculture System</div>
+                                    </div>
+                                    <button onclick="alert('Buka Modal Plotting Dosen')" class="px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-600 hover:text-white transition">
+                                        Set Dosen
+                                    </button>
+                                </div>
+                                <div class="p-2.5 bg-slate-50 rounded-lg flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold text-slate-800">Anisa Putri (210401102)</div>
+                                        <div class="text-[10px] text-slate-500">Judul: UI/UX Redesign E-Commerce</div>
+                                    </div>
+                                    <button onclick="alert('Buka Modal Plotting Dosen')" class="px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-600 hover:text-white transition">
+                                        Set Dosen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: SUBMIT DRAFT BIMBINGAN (FOR MAHASISWA) -->
+    <div id="modalSubmitDraft" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">Ajukan Draft Bimbingan Baru</h3>
+                <button onclick="closeModal('modalSubmitDraft')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleDraftSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Pilih Bab Skripsi</label>
+                    <select id="draftBab" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Bab 1">Bab 1 - Pendahuluan</option>
+                        <option value="Bab 2">Bab 2 - Kajian Pustaka</option>
+                        <option value="Bab 3">Bab 3 - Metodologi Penelitian</option>
+                        <option value="Bab 4" selected>Bab 4 - Hasil & Pembahasan</option>
+                        <option value="Bab 5">Bab 5 - Kesimpulan & Saran</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Topik Focus / Pokok Pembahasan</label>
+                    <input type="text" id="draftTopik" required placeholder="Contoh: Revisi Diagram Use Case & Pengujian Akurasi" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Catatan Pengantar untuk Dosen</label>
+                    <textarea id="draftCatatan" rows="3" placeholder="Jelaskan perubahan atau pertanyaan yang ingin ditanyakan..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Upload Berkas Draft (PDF/Docx)</label>
+                    <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer">
+                        <i class="fa-solid fa-file-arrow-up text-blue-500 text-2xl mb-1"></i>
+                        <p class="text-slate-600 font-medium">Klik untuk upload file draft</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Simulasi File: Draft_Bab4_Budi.pdf (Maks 10MB)</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('modalSubmitDraft')" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition">Kirim Draft</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: DOSEN REVIEW DRAFT (FOR DOSEN) -->
+    <div id="modalReviewDraft" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">Review Draft Bimbingan Mahasiswa</h3>
+                <button onclick="closeModal('modalReviewDraft')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100 text-xs">
+                <div class="font-bold text-blue-900" id="reviewMhsName">Budi Santoso (210401088)</div>
+                <div class="text-blue-700 mt-0.5" id="reviewMhsBab">Mengkaji: Bab 4 - Hasil & Pembahasan</div>
+            </div>
+
+            <form onsubmit="handleReviewSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="reviewLogId">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Keputusan Status Review</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="border rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="statusReview" value="Disetujui" checked class="text-emerald-600">
+                            <span class="font-medium text-emerald-700">ACC (Disetujui)</span>
+                        </label>
+                        <label class="border rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="statusReview" value="Perlu Revisi" class="text-amber-600">
+                            <span class="font-medium text-amber-700">Perlu Revisi</span>
+                        </label>
+                        <label class="border rounded-xl p-2.5 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="statusReview" value="Ditolak" class="text-rose-600">
+                            <span class="font-medium text-rose-700">Tolak Draft</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Catatan Revisi & Feedback Dosen</label>
+                    <textarea id="reviewCatatan" rows="4" required placeholder="Tuliskan poin-poin revisi secara mendetail..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Upload File Coretan / Annotated Draft (Opsional)</label>
+                    <input type="file" class="block w-full text-slate-500 text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('modalReviewDraft')" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition">Simpan Hasil Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: SCHEDULE BIMBINGAN (FOR MAHASISWA) -->
+    <div id="modalSchedule" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-800">Ajukan Janji Bimbingan</h3>
+                <button onclick="closeModal('modalSchedule')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleScheduleSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Pilih Tanggal & Waktu</label>
+                    <input type="datetime-local" id="schedDatetime" required class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Mode Bimbingan</label>
+                    <select id="schedMode" class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Tatap Muka / Ruang Dosen">Tatap Muka (Ruang Dosen)</option>
+                        <option value="Online / Zoom Meeting">Online (Zoom Meeting)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Agenda / Hal yang Dibahas</label>
+                    <textarea id="schedAgenda" rows="2" placeholder="Diskusi bab 4 dan pengujian dataset..." class="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('modalSchedule')" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition">Kirim Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRINT VIEW AREA (PRINT-ONLY KARTU BIMBINGAN) -->
+    <div class="print-only p-8 bg-white max-w-4xl mx-auto text-black">
+        <div class="text-center border-b-2 border-black pb-4 mb-6">
+            <h1 class="text-xl font-bold uppercase tracking-wide">KARTU BUKTI BIMBINGAN SKRIPSI / TUGAS AKHIR</h1>
+            <p class="text-sm">FAKULTAS ILMU KOMPUTER & TEKNOLOGI INFORMASI</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs mb-6 border p-4 rounded">
+            <div>
+                <p><strong>Nama Mahasiswa:</strong> Budi Santoso</p>
+                <p><strong>NIM:</strong> 210401088</p>
+                <p><strong>Program Studi:</strong> Teknik Informatika</p>
+            </div>
+            <div>
+                <p><strong>Dosen Pembimbing I:</strong> Dr. Hendra, M.T.</p>
+                <p><strong>Dosen Pembimbing II:</strong> Siti Aminah, M.Kom.</p>
+                <p><strong>Judul Skripsi:</strong> Penerapan Machine Learning untuk Prediksi Kelulusan Mahasiswa</p>
+            </div>
+        </div>
+
+        <table class="w-full text-xs border-collapse border border-black mb-8">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-black p-2 w-10">No</th>
+                    <th class="border border-black p-2 w-24">Tanggal</th>
+                    <th class="border border-black p-2 w-20">Bab</th>
+                    <th class="border border-black p-2">Catatan / Pokok Pembahasan</th>
+                    <th class="border border-black p-2 w-20">Status</th>
+                    <th class="border border-black p-2 w-24">Paraf Dosen</th>
+                </tr>
+            </thead>
+            <tbody id="printLogTable">
+                <!-- Dynamic injected via JS -->
+            </tbody>
+        </table>
+
+        <div class="flex justify-between text-xs mt-12">
+            <div class="text-center">
+                <p>Mahasiswa,</p>
+                <div class="h-16"></div>
+                <p class="font-bold underline">Budi Santoso</p>
+                <p>NIM. 210401088</p>
+            </div>
+            <div class="text-center">
+                <p>Mengetahui,<br>Dosen Pembimbing I</p>
+                <div class="h-16"></div>
+                <p class="font-bold underline">Dr. Hendra, M.T.</p>
+                <p>NIP. 19780512 200501 1 002</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT -->
+    <script>
+        // Initial Mock State & LocalStorage Setup
+        const INITIAL_DATA = {
+            currentRole: 'mahasiswa',
+            bimbinganLogs: [
+                { id: 1, bab: 'Bab 1', tanggal: '2026-10-02', topik: 'Latar Belakang & Rumusan Masalah', catatan: 'Perjelas motivasi pemilihan algoritma Random Forest vs SVM.', status: 'Disetujui', file: 'Draft_Bab1_v2.pdf' },
+                { id: 2, bab: 'Bab 2', tanggal: '2026-10-10', topik: 'Landasan Teori & Study Terkait', catatan: 'Tambahkan 5 jurnal internasional terbaru dari IEEE/Springer.', status: 'Disetujui', file: 'Draft_Bab2_Final.pdf' },
+                { id: 3, bab: 'Bab 3', tanggal: '2026-10-18', topik: 'Metodologi & Preprocessing Data', catatan: 'Flowchart alur eksperimen sudah sesuai. Lanjut Bab 4.', status: 'Disetujui', file: 'Draft_Bab3_ACC.pdf' },
+                { id: 4, bab: 'Bab 4', tanggal: '2026-10-25', topik: 'Hasil Visualisasi & Confusion Matrix', catatan: 'Grafik evaluasi model perlu diperjelas sumbu X dan Y-nya. Lakukan penyeimbangan class data.', status: 'Perlu Revisi', file: 'Draft_Bab4_Revisi1.pdf' }
+            ],
+            chatMessages: [
+                { sender: 'dosen', text: 'Selamat pagi Budi, bagaimana progres revisi Bab 4?', time: '08:30' },
+                { sender: 'mahasiswa', text: 'Selamat pagi Pak, revisi confusion matrix sedang saya rapihkan.', time: '08:32' },
+                { sender: 'dosen', text: 'Baik, jika sudah selesai segera upload draft terbarunya ya.', time: '08:35' }
+            ],
+            mahasiswaDosenList: [
+                { nim: '210401088', nama: 'Budi Santoso', bab: 'Bab 4', judul: 'Penerapan Machine Learning untuk Prediksi Kelulusan', draftDate: '25 Okt 2026', status: 'Perlu Revisi' },
+                { nim: '210401072', nama: 'Siti Rahma', bab: 'Bab 5', judul: 'Sistem Informasi Inventory Berbasis Web QR-Code', draftDate: '26 Okt 2026', status: 'Pending Review' },
+                { nim: '210401044', nama: 'Andi Wijaya', bab: 'Bab 2', judul: 'Analisis Keamanan Network Firewalls Menggunakan Snort', draftDate: '22 Okt 2026', status: 'Disetujui' },
+                { nim: '210401105', nama: 'Dewi Lestari', bab: 'Bab 1', judul: 'Rancang Bangun Aplikasi Mobile Kasir UMKM', draftDate: '24 Okt 2026', status: 'Pending Review' }
+            ],
+            schedules: [
+                { id: 1, mhs: 'Budi Santoso', datetime: '2026-10-28 10:00', mode: 'Tatap Muka / Ruang Dosen', agenda: 'Konsultasi Penyeimbangan Class Data Bab 4', status: 'Menunggu' },
+                { id: 2, mhs: 'Siti Rahma', datetime: '2026-10-29 13:30', mode: 'Online / Zoom Meeting', agenda: 'Review Kesimpulan & Draft Bab 5', status: 'Disetujui' }
+            ]
+        };
+
+        // Load or Init State
+        let AppState = JSON.parse(localStorage.getItem('SIM_SKRIPSI_STATE')) || INITIAL_DATA;
+
+        function saveState() {
+            localStorage.setItem('SIM_SKRIPSI_STATE', JSON.stringify(AppState));
+        }
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebar();
+            switchRole(AppState.currentRole);
+            renderBimbinganHistory();
+            renderChat();
+            renderDosenTable();
+            renderDosenSchedules();
+        });
+
+        // ROLE SWITCHING LOGIC
+        function switchRole(role) {
+            AppState.currentRole = role;
+            saveState();
+
+            document.getElementById('roleSelector').value = role;
+
+            // Hide all views
+            document.getElementById('viewMahasiswa').classList.add('hidden');
+            document.getElementById('viewDosen').classList.add('hidden');
+            document.getElementById('viewKaprodi').classList.add('hidden');
+
+            const avatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const userSub = document.getElementById('userSub');
+
+            if (role === 'mahasiswa') {
+                document.getElementById('viewMahasiswa').classList.remove('hidden');
+                avatar.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150';
+                userName.innerText = 'Budi Santoso';
+                userSub.innerText = 'NIM: 210401088';
+            } else if (role === 'dosen') {
+                document.getElementById('viewDosen').classList.remove('hidden');
+                avatar.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150';
+                userName.innerText = 'Dr. Hendra, M.T.';
+                userSub.innerText = 'NIP: 197805122005011002';
+            } else if (role === 'kaprodi') {
+                document.getElementById('viewKaprodi').classList.remove('hidden');
+                avatar.src = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150';
+                userName.innerText = 'Prof. Dr. Ratna Dewi';
+                userSub.innerText = 'Koordinator Skripsi';
+            }
+
+            renderSidebar();
+            showToast(`Beralih ke tampilan: ${role.toUpperCase()}`, 'info');
+        }
+
+        // SIDEBAR RENDERER
+        function renderSidebar() {
+            const menu = document.getElementById('sidebarMenu');
+            const role = AppState.currentRole;
+            let html = '';
+
+            if (role === 'mahasiswa') {
+                html = `
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700">
+                        <i class="fa-solid fa-chart-line w-6"></i> Dashboard Progres
+                    </a>
+                    <a href="#" onclick="openModalSubmitDraft()" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-upload w-6"></i> Ajukan Draft Bab
+                    </a>
+                    <a href="#" onclick="openModalSchedule()" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-calendar w-6"></i> Jadwal Bimbingan
+                    </a>
+                    <a href="#" onclick="printKartuBimbingan()" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-print w-6"></i> Cetak Kartu Logbook
+                    </a>
+                `;
+            } else if (role === 'dosen') {
+                html = `
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700">
+                        <i class="fa-solid fa-users w-6"></i> Daftar Mahasiswa
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-file-signature w-6"></i> Review Draft (${AppState.bimbinganLogs.filter(x=>x.status==='Pending').length})
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-clock w-6"></i> Permintaan Jadwal
+                    </a>
+                `;
+            } else {
+                html = `
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700">
+                        <i class="fa-solid fa-chart-pie w-6"></i> Overview Statistik
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2.5 text-xs font-medium text-slate-600 rounded-xl hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-user-plus w-6"></i> Plotting Pembimbing
+                    </a>
+                `;
+            }
+            menu.innerHTML = html;
+        }
+
+        // RENDER BIMBINGAN HISTORY (MAHASISWA)
+        function renderBimbinganHistory() {
+            const container = document.getElementById('mhsHistoryList');
+            document.getElementById('bimbinganCount').innerText = `Total: ${AppState.bimbinganLogs.length} Sesi`;
+
+            if (AppState.bimbinganLogs.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Belum ada riwayat bimbingan.</div>`;
+                return;
+            }
+
+            container.innerHTML = AppState.bimbinganLogs.slice().reverse().map(log => {
+                let statusBadge = '';
+                if (log.status === 'Disetujui') {
+                    statusBadge = `<span class="px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full border border-green-200"><i class="fa-solid fa-check mr-1"></i> Disetujui (ACC)</span>`;
+                } else if (log.status === 'Perlu Revisi') {
+                    statusBadge = `<span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Perlu Revisi</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full border border-blue-200"><i class="fa-solid fa-clock mr-1"></i> Pending Review</span>`;
+                }
+
+                return `
+                    <div class="border border-slate-200 rounded-xl p-4 hover:border-blue-300 transition bg-slate-50/40">
+                        <div class="flex justify-between items-start gap-2 mb-2">
+                            <div>
+                                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">${log.bab}</span>
+                                <h4 class="font-bold text-slate-800 text-sm mt-1">${log.topik}</h4>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3 bg-white p-3 rounded-lg border border-slate-100">
+                            <strong>Catatan Dosen:</strong> ${log.catatan || 'Belum ada catatan.'}
+                        </p>
+                        <div class="flex justify-between items-center text-[11px] text-slate-400 border-t pt-2 border-slate-100">
+                            <span><i class="fa-regular fa-calendar mr-1"></i> ${log.tanggal}</span>
+                            <span class="text-blue-600 hover:underline cursor-pointer"><i class="fa-solid fa-paperclip mr-1"></i> ${log.file || 'File_Draft.pdf'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // RENDER CHAT
+        function renderChat() {
+            const stream = document.getElementById('chatStream');
+            stream.innerHTML = AppState.chatMessages.map(msg => {
+                const isMhs = msg.sender === 'mahasiswa';
+                return `
+                    <div class="flex ${isMhs ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[80%] ${isMhs ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-slate-100 text-slate-800 rounded-r-xl rounded-tl-xl'} p-2.5 shadow-sm">
+                            <p class="leading-relaxed">${msg.text}</p>
+                            <span class="text-[9px] block text-right mt-1 ${isMhs ? 'text-blue-200' : 'text-slate-400'}">${msg.time}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const val = input.value.trim();
+            if (!val) return;
+
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            AppState.chatMessages.push({
+                sender: AppState.currentRole === 'dosen' ? 'dosen' : 'mahasiswa',
+                text: val,
+                time: timeStr
+            });
+
+            saveState();
+            renderChat();
+            input.value = '';
+        }
+
+        // DOSEN VIEW: RENDER TABLE & SCHEDULES
+        function renderDosenTable() {
+            const tbody = document.getElementById('tableDosenMhs');
+            const search = document.getElementById('searchMhs')?.value.toLowerCase() || '';
+            const filterBab = document.getElementById('filterBab')?.value || 'all';
+
+            const filtered = AppState.mahasiswaDosenList.filter(mhs => {
+                const matchSearch = mhs.nama.toLowerCase().includes(search) || mhs.nim.includes(search);
+                const matchBab = filterBab === 'all' || mhs.bab === filterBab;
+                return matchSearch && matchBab;
+            });
+
+            tbody.innerHTML = filtered.map(mhs => {
+                let statusClass = 'bg-amber-100 text-amber-700';
+                if (mhs.status === 'Disetujui') statusClass = 'bg-green-100 text-green-700';
+                if (mhs.status === 'Perlu Revisi') statusClass = 'bg-rose-100 text-rose-700';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-semibold text-slate-800">
+                            <div>${mhs.nama}</div>
+                            <div class="text-[10px] text-slate-400 font-normal">NIM: ${mhs.nim}</div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600 max-w-xs truncate">${mhs.judul}</td>
+                        <td class="py-3 px-4"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">${mhs.bab}</span></td>
+                        <td class="py-3 px-4 text-slate-500">${mhs.draftDate}</td>
+                        <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${statusClass}">${mhs.status}</span></td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="openModalReview('${mhs.nama}', '${mhs.bab}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> Review
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterMahasiswaDosen() {
+            renderDosenTable();
+        }
+
+        function renderDosenSchedules() {
+            const container = document.getElementById('dosenScheduleList');
+            container.innerHTML = AppState.schedules.map(s => `
+                <div class="border border-slate-200 rounded-xl p-3.5 flex justify-between items-center bg-slate-50">
+                    <div>
+                        <div class="font-bold text-slate-800">${s.mhs}</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${s.datetime} (${s.mode})</div>
+                        <div class="text-[11px] text-slate-600 italic mt-1 font-medium">"${s.agenda}"</div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="updateScheduleStatus(${s.id}, 'Disetujui')" class="px-2.5 py-1 bg-emerald-600 text-white text-[11px] rounded-lg hover:bg-emerald-700 font-medium">Terima</button>
+                        <button onclick="updateScheduleStatus(${s.id}, 'Ditolak')" class="px-2.5 py-1 bg-slate-200 text-slate-700 text-[11px] rounded-lg hover:bg-slate-300 font-medium">Tolak</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateScheduleStatus(id, status) {
+            AppState.schedules = AppState.schedules.filter(s => s.id !== id);
+            saveState();
+            renderDosenSchedules();
+            showToast(`Jadwal bimbingan berhasil di-${status.toLowerCase()}`, 'success');
+        }
+
+        // MODAL HANDLERS & SUBMISSIONS
+        function openModalSubmitDraft() {
+            document.getElementById('modalSubmitDraft').classList.remove('hidden');
+        }
+
+        function openModalSchedule() {
+            document.getElementById('modalSchedule').classList.remove('hidden');
+        }
+
+        function openModalReview(name, bab) {
+            document.getElementById('reviewMhsName').innerText = `${name}`;
+            document.getElementById('reviewMhsBab').innerText = `Mengkaji: ${bab}`;
+            document.getElementById('modalReviewDraft').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function handleDraftSubmit(e) {
+            e.preventDefault();
+            const bab = document.getElementById('draftBab').value;
+            const topik = document.getElementById('draftTopik').value;
+            const catatan = document.getElementById('draftCatatan').value;
+
+            const newLog = {
+                id: Date.now(),
+                bab: bab,
+                tanggal: new Date().toISOString().split('T')[0],
+                topik: topik,
+                catatan: 'Belum di-review oleh dosen pembimbing.',
+                status: 'Pending',
+                file: `Draft_${bab.replace(' ','')}_Terbaru.pdf`
+            };
+
+            AppState.bimbinganLogs.push(newLog);
+            
+            // Update mahasiswa table state
+            const mhsItem = AppState.mahasiswaDosenList.find(x => x.nim === '210401088');
+            if(mhsItem) {
+                mhsItem.bab = bab;
+                mhsItem.status = 'Pending Review';
+                mhsItem.draftDate = 'Hari ini';
+            }
+
+            saveState();
+            renderBimbinganHistory();
+            renderDosenTable();
+            closeModal('modalSubmitDraft');
+            showToast('Draft bimbingan berhasil diajukan ke Dosen!', 'success');
+        }
+
+        function handleReviewSubmit(e) {
+            e.preventDefault();
+            const status = document.querySelector('input[name="statusReview"]:checked').value;
+            const catatan = document.getElementById('reviewCatatan').value;
+
+            // Update latest log
+            if(AppState.bimbinganLogs.length > 0) {
+                const lastLog = AppState.bimbinganLogs[AppState.bimbinganLogs.length - 1];
+                lastLog.status = status;
+                lastLog.catatan = catatan;
+            }
+
+            // Update table
+            const mhsItem = AppState.mahasiswaDosenList.find(x => x.nim === '210401088');
+            if(mhsItem) {
+                mhsItem.status = status;
+            }
+
+            saveState();
+            renderBimbinganHistory();
+            renderDosenTable();
+            closeModal('modalReviewDraft');
+            showToast(`Hasil review berhasil disimpan: (${status})`, 'success');
+        }
+
+        function handleScheduleSubmit(e) {
+            e.preventDefault();
+            const datetime = document.getElementById('schedDatetime').value;
+            const mode = document.getElementById('schedMode').value;
+            const agenda = document.getElementById('schedAgenda').value;
+
+            AppState.schedules.push({
+                id: Date.now(),
+                mhs: 'Budi Santoso',
+                datetime: datetime.replace('T', ' '),
+                mode: mode,
+                agenda: agenda,
+                status: 'Menunggu'
+            });
+
+            saveState();
+            renderDosenSchedules();
+            closeModal('modalSchedule');
+            showToast('Pengajuan jadwal berhasil dikirim!', 'success');
+        }
+
+        // PRINT KARTU BIMBINGAN
+        function printKartuBimbingan() {
+            const table = document.getElementById('printLogTable');
+            table.innerHTML = AppState.bimbinganLogs.map((log, index) => `
+                <tr>
+                    <td class="border border-black p-2 text-center">${index + 1}</td>
+                    <td class="border border-black p-2">${log.tanggal}</td>
+                    <td class="border border-black p-2 font-bold">${log.bab}</td>
+                    <td class="border border-black p-2">
+                        <strong>${log.topik}</strong><br>
+                        <em>Catatan: ${log.catatan}</em>
+                    </td>
+                    <td class="border border-black p-2 text-center font-semibold">${log.status}</td>
+                    <td class="border border-black p-2 text-center italic text-gray-400">[Paraf Valid]</td>
+                </tr>
+            `).join('');
+
+            window.print();
+        }
+
+        // TOAST NOTIFICATION UTILITY
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-800 text-white';
+            if(type === 'success') bg = 'bg-emerald-600 text-white';
+            if(type === 'info') bg = 'bg-blue-600 text-white';
+
+            toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-xs font-medium flex items-center space-x-2 transition-all duration-300 transform translate-x-full`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
